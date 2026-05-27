@@ -1,0 +1,20 @@
+# Terraform
+infra/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+.terraform/
+
+# Node
+node_modules/
+
+# Environment
+.env
+*.pem
+
+# Build
+dist/
+build/
+
+# Keys
+*.pem

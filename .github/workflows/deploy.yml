@@ -1,0 +1,31 @@
+name: Deploy MediPlan
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v3
+
+    - name: Set up Node.js
+      uses: actions/setup-node@v3
+      with:
+        node-version: 20
+
+    - name: Build Backend
+      run: |
+        cd backend
+        npm install
+        npm run build
+
+    - name: Build Frontend
+      run: |
+        cd frontend
+        npm install
+        npm run build
+
+    # In a real scenario, you would build Docker images and push to ECR
+    # Then ssh into EC2 and run docker-compose pull && docker-compose up -d

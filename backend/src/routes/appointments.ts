@@ -13,6 +13,10 @@ router.post("/", authenticateJWT, authorizeRoles(UserRole.PATIENT), async (req: 
   const { doctorId, appointmentDate, reason } = req.body;
   const patientId = req.user?.id;
 
+  if (!patientId) {
+    return res.status(401).json({ message: "User not authenticated" });
+  }
+
   try {
     const patient = await userRepository.findOneBy({ id: patientId });
     const doctor = await userRepository.findOneBy({ id: doctorId, role: UserRole.DOCTOR });
@@ -41,17 +45,25 @@ router.get("/my-appointments", authenticateJWT, async (req: AuthRequest, res: Re
   const userId = req.user?.id;
   const role = req.user?.role;
 
+  if (!userId) {
+    return res.status(401).json({ message: "User not authenticated" });
+  }
+
   try {
     let appointments;
     if (role === UserRole.PATIENT) {
       appointments = await appointmentRepository.find({
         where: { patient: { id: userId } },
-        relations: ["doctor"],
+        relations: { doctor: true },
       });
     } else if (role === UserRole.DOCTOR) {
       appointments = await appointmentRepository.find({
         where: { doctor: { id: userId } },
-        relations: ["patient"],
+        relations: { patient: true },
+      });
+    } else {
+      appointments = await appointmentRepository.find({
+        relations: { patient: true, doctor: true },
       });
     }
 
@@ -63,11 +75,11 @@ router.get("/my-appointments", authenticateJWT, async (req: AuthRequest, res: Re
 
 // Update appointment status (Doctor or Admin)
 router.patch("/:id/status", authenticateJWT, authorizeRoles(UserRole.DOCTOR, UserRole.ADMIN), async (req: AuthRequest, res: Response) => {
-  const { id } = req.params;
+  const id = parseInt(req.params.id);
   const { status, notes } = req.body;
 
   try {
-    const appointment = await appointmentRepository.findOneBy({ id: parseInt(id) });
+    const appointment = await appointmentRepository.findOneBy({ id });
     if (!appointment) {
       return res.status(404).json({ message: "Appointment not found" });
     }

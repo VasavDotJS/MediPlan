@@ -1,6 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import { UserRole } from "../models/User";
+import { UserRole } from "../models/User.js";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -15,7 +15,11 @@ export const authenticateJWT = (req: AuthRequest, res: Response, next: NextFunct
   if (authHeader) {
     const token = authHeader.split(" ")[1];
 
-    jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret", (err: any, user: any) => {
+    if (!token) {
+      return res.sendStatus(401);
+    }
+
+    jwt.verify(token, process.env.JWT_SECRET || "your_jwt_secret", (err, user: any) => {
       if (err) {
         return res.sendStatus(403);
       }
